@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CitraCraft</title>
+    <link href="{{ url_for('static', filename='output.css') }}" rel="stylesheet">
+    <style>
+        @media only screen and (min-width: 768px) {
+            .parent:hover .child {
+                opacity: 1;
+                height: auto;
+                overflow: none;
+                transform: translateY(0);
+            }
+
+            .child {
+                opacity: 0;
+                height: 0;
+                overflow: hidden;
+                transform: translateY(-10%);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <!-- Navbar -->
+    <nav class="flex px-4 border-b md:shadow-lg items-center relative">
+        <div class="text-lg font-bold md:py-0 py-4">
+            CitraCraft
+        </div>
+        <ul class="md:px-2 ml-auto md:flex md:space-x-2 absolute md:relative top-full left-0 right-0">
+            <li>
+                <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
+                    <span>About us</span>
+                </a>
+            </li>
+            <li class="relative parent">
+                <a href="#" class="flex justify-between md:inline-flex p-4 items-center hover:bg-gray-50 space-x-2">
+                    <span>Metode</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current pt-1" viewBox="0 0 24 24">
+                        <path d="M0 7.33l2.829-2.83 9.175 9.339 9.167-9.339 2.829 2.83-11.996 12.17z" />
+                    </svg>
+                </a>
+                <ul
+                    class="child transition duration-300 md:absolute top-full right-0 md:w-48 bg-white md:shadow-lg md:rounded-b ">
+                    <li>
+                        <a href="histogram.html" class="flex px-4 py-3 hover:bg-gray-50">
+                            Histogram Equalization
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex px-4 py-3 hover:bg-gray-50">
+                            Grayscale
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex px-4 py-3 hover:bg-gray-50">
+                            Machine Learning
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <div class="ml-auto md:hidden text-gray-500 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path
+                    d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
+            </svg>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="text-center bg-indigo-600 text-white py-20">
+        <h1 class="text-4xl font-bold mb-4">Upload, Proses, dan Temukan Keajaiban di Setiap Pixel</h1>
+        <p class="text-lg">Ingin mencoba berbagai teknik pengolahan citra seperti yang biasa digunakan dalam riset dan
+            pengembangan teknologi gambar? <br>CitraCraft memberikanmu alat yang mudah diakses untuk mengubah gambar
+            sesuai keinginanmu.</p>
+        <!-- <a href="#"
+            class="mt-8 inline-block bg-white text-indigo-600 px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100">Mulai
+            Sekarang</a> -->
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-gray-100">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-indigo-600 mb-6">Kenapa CitraCraft?</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">Upload Mudah</h3>
+                    <p class="text-gray-600">Cukup upload gambarmu, dan langsung proses dengan berbagai metode yang
+                        tersedia di platform kami.</p>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">Metode Canggih</h3>
+                    <p class="text-gray-600">Gunakan metode terkini seperti Histogram Equalization, Grayscale, dan
+                        teknik Machine Learning lainnya.</p>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">Hasil Instan</h3>
+                    <p class="text-gray-600">Lihat hasil dari metode pengolahan citra secara real-time, langsung dari
+                        browsermu.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="bg-indigo-600 text-white py-8">
+        <div class="max-w-6xl mx-auto text-center">
+            <p>&copy; 2024 CitraCraft. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- <h1 class="text-amber-400">Upload Gambar</h1>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+    </form>
+
+    {% if filename %}
+        <h2>Gambar yang diunggah:</h2>
+        <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image">
+    {% endif %} -->
+</body>
+
+</html>
