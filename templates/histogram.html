@@ -97,19 +97,48 @@
             {% endwith %}
 
             <!-- Form Upload -->
-            <form method="post"  action="/histogram.html" enctype="multipart/form-data" class="space-y-4">
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
                 <input type="file" name="file"
+                class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            
+                <label for="image_type" class="block text-gray-700">Tipe Gambar:</label>
+                <select id="image_type" name="image_type"
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="rgb">RGB</option>
+                    <option value="grayscale">Grayscale</option>
+                </select>
+
                 <input type="submit" value="Upload"
                     class="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 cursor-pointer">
             </form>
 
-
+            <!--show image-->
             {% if filename %}
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gray-600">Gambar yang diunggah:</h3>
                 <img src="{{ url_for('static', filename='static/uploads/' + filename) }}" alt="Uploaded Image" class="mt-4 w-full rounded-lg shadow-lg">
+            
+            </br>
+                <!-- Histogram -->
+                {% if hist_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Histogram ({{ image_type|capitalize }}):</h3>
+                <img src="data:image/png;base64,{{ hist_img_data }}" alt="Histogram" class="w-full rounded-lg shadow-md">
+                {% endif %}
+            </br>
+                <!-- Equalized Histogram -->
+                {% if equalized_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Equalized Histogram ({{ image_type|capitalize }}):</h3>
+                <img src="data:image/png;base64,{{ equal_hist_img_data }}" alt="Equalized Histogram" class="w-full rounded-lg shadow-md mb-4">
+                {% endif %}
+            </br>
+                <!-- Equalized Image -->
+                {% if equalized_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Equalized Image ({{ image_type|capitalize }}):</h3>
+                <img src="data:image/png;base64,{{ equalized_img_data }}" alt="Equalized Image" class="w-full rounded-lg shadow-md">
+                {% endif %}
             </div>
+
+
             {% endif %}
 
         </div>
