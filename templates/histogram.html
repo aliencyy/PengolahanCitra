@@ -5,82 +5,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{{ url_for('static', filename='output.css') }}" rel="stylesheet">
-    <title>Histogram Equalization</title>
-    <style>
-        @media only screen and (min-width: 768px) {
-            .parent:hover .child {
-                opacity: 1;
-                height: auto;
-                overflow: none;
-                transform: translateY(0);
-            }
-
-            .child {
-                opacity: 0;
-                height: 0;
-                overflow: hidden;
-                transform: translateY(-10%);
-            }
-        }
-    </style>
+    <title>Image Processor</title>
 </head>
 
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800" style="padding-top: 64px;">
     <!-- Navbar -->
-    <nav class="flex px-4 border-b md:shadow-lg items-center relative">
-        <div class="text-lg font-bold md:py-0 py-4">
-            CitraCraft
-        </div>
-        <ul class="md:px-2 ml-auto md:flex md:space-x-2 absolute md:relative top-full left-0 right-0">
-            <li>
-                <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
-                    <span>About us</span>
-                </a>
-            </li>
-            <li class="relative parent">
-                <a href="#" class="flex justify-between md:inline-flex p-4 items-center hover:bg-gray-50 space-x-2">
-                    <span>Metode</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current pt-1" viewBox="0 0 24 24">
-                        <path d="M0 7.33l2.829-2.83 9.175 9.339 9.167-9.339 2.829 2.83-11.996 12.17z" />
+    <nav class="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 border-b border-gray-200 dark:border-gray-600">
+        <div class="max-w-screen-xl mx-auto px-4 py-4 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="{{ url_for('homepage') }}" class="flex items-center space-x-3">
+                <img src="https://flowbite.com/docs/images/logo.svg" class="h-8" alt="Flowbite Logo">
+                <span class="text-2xl font-semibold dark:text-white">CitraCraft</span>
+            </a>
+
+            <!-- Menu items - hidden on small screens -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ url_for('homepage') }}"
+                    class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">Home</a>
+                <a href="#about"
+                    class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">About
+                    Us</a>
+                <button type="button"
+                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    onclick="window.location.href='histogram.html';">
+                    Get Started
+                </button>
+            </div>
+
+            <!-- Hamburger menu button -->
+            <div class="md:hidden">
+                <button type="button"
+                    class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg focus:outline-none"
+                    aria-controls="mobile-menu" aria-expanded="false">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                </a>
-                <ul
-                    class="child transition duration-300 md:absolute top-full right-0 md:w-48 bg-white md:shadow-lg md:rounded-b ">
-                    <li>
-                        <a href="histogram.html" class="flex px-4 py-3 hover:bg-gray-50">
-                            Histogram Equalization
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex px-4 py-3 hover:bg-gray-50">
-                            Grayscale
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex px-4 py-3 hover:bg-gray-50">
-                            Machine Learning
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-        <div class="ml-auto md:hidden text-gray-500 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                <path
-                    d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
-            </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="md:hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="homepage.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
+                <a href="#about"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">About
+                    Us</a>
+                <a href="histogram.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800">Get
+                    Started</a>
+            </div>
         </div>
     </nav>
     <!-- End Navbar -->
 
     <!-- Main content -->
     <div class="container mx-auto py-12">
-        <h1 class="text-4xl font-bold text-center text-blue-500 mb-8">Histogram Equalization</h1>
+        <h1 class="text-4xl font-bold text-center text-blue-500 mb-8">Image Processor</h1>
 
         <div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6">
             <h2 class="text-2xl font-semibold text-gray-700 mb-6">Upload Gambar</h2>
@@ -99,8 +83,8 @@
             <!-- Form Upload -->
             <form method="post" enctype="multipart/form-data" class="space-y-4">
                 <input type="file" name="file"
-                class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            
+                    class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
                 <label for="image_type" class="block text-gray-700">Tipe Gambar:</label>
                 <select id="image_type" name="image_type"
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -116,25 +100,28 @@
             {% if filename %}
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gray-600">Gambar yang diunggah:</h3>
-                <img src="{{ url_for('static', filename='static/uploads/' + filename) }}" alt="Uploaded Image" class="mt-4 w-full rounded-lg shadow-lg">
-            
-            </br>
+                <img src="{{ url_for('static', filename='static/uploads/' + filename) }}" alt="Uploaded Image"
+                    class="mt-4 w-full rounded-lg shadow-lg">
+                </br>
                 <!-- Histogram -->
                 {% if hist_img_data %}
                 <h3 class="text-lg font-semibold text-gray-600">Histogram ({{ image_type|capitalize }}):</h3>
-                <img src="data:image/png;base64,{{ hist_img_data }}" alt="Histogram" class="w-full rounded-lg shadow-md">
+                <img src="data:image/png;base64,{{ hist_img_data }}" alt="Histogram"
+                    class="w-full rounded-lg shadow-md">
                 {% endif %}
-            </br>
+                </br>
                 <!-- Equalized Histogram -->
                 {% if equal_hist_img_data %}
                 <h3 class="text-lg font-semibold text-gray-600">Equalized Histogram ({{ image_type|capitalize }}):</h3>
-                <img src="data:image/png;base64,{{ equal_hist_img_data }}" alt="Equalized Histogram" class="w-full rounded-lg shadow-md mb-4">
+                <img src="data:image/png;base64,{{ equal_hist_img_data }}" alt="Equalized Histogram"
+                    class="w-full rounded-lg shadow-md mb-4">
                 {% endif %}
-            </br>
+                </br>
                 <!-- Equalized Image -->
                 {% if equalized_img_data %}
                 <h3 class="text-lg font-semibold text-gray-600">Equalized Image ({{ image_type|capitalize }}):</h3>
-                <img src="data:image/png;base64,{{ equalized_img_data }}" alt="Equalized Image" class="w-full rounded-lg shadow-md">
+                <img src="data:image/png;base64,{{ equalized_img_data }}" alt="Equalized Image"
+                    class="w-full rounded-lg shadow-md">
                 {% endif %}
             </div>
 
