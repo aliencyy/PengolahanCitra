@@ -88,10 +88,11 @@
                 <label for="image_type" class="block text-gray-700">Tipe Gambar:</label>
                 <select id="image_type" name="image_type"
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="rgb">RGB</option>
-                    <option value="grayscale">Grayscale</option>
+                    <option value="rgb">RGB Histogram</option>
+                    <option value="grayscale">Grayscale Histogram</option>
                     <option value="edge_detection">Edge Detection</option>
                     <option value="face_detection">Face Detection</option>
+                    <option value="face_blurring">Face Blurring</option> 
                 </select>
 
                 <input type="submit" value="Upload"
@@ -137,6 +138,12 @@
                 <h3 class="text-lg font-semibold text-gray-600">Face Detection Image:</h3>
                 <img src="data:image/png;base64,{{ face_img_data }}" alt="Face Detection Image"
                     class="w-full rounded-lg shadow-md">
+                {% endif %}
+                <!--Face Blurring-->
+                {% if face_blur_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Face Blurring Image:</h3>
+                <img src="data:image/png;base64,{{ face_blur_img_data }}" alt="Face Blur Image"
+                    class="w-full rounded-lg shadow-md">   
                 {% endif %}
             </div>
             {% endif %}
