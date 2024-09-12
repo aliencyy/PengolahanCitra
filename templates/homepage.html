@@ -136,6 +136,81 @@
                 max-width: 300px;
             }
         }
+
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 50px;
+            height: 100vh;
+        }
+
+        .box {
+            background: url('../image/image_animation.jpg');
+            -webkit-background-size: cover;
+            background-position: center center;
+            height: 400px;
+            width: 400px;
+            /* Reduce the width */
+            box-shadow: 0 20px 5px rgba(0, 0, 0, 0.2);
+            animation: animate 5s ease-in-out infinite;
+            transition: all 1s ease-in-out;
+        }
+
+        /* Gaya untuk wrapper */
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Styling untuk section dengan Flexbox */
+        section.flex {
+            display: flex;
+            flex-direction: row;
+            /* Baris default */
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Media query untuk layar kecil */
+        @media (max-width: 768px) {
+            section.flex {
+                flex-direction: column;
+                /* Vertikal pada layar kecil */
+                text-align: center;
+                /* Rata tengah teks pada layar kecil */
+            }
+
+            .wrapper {
+                margin-top: 20px;
+                /* Tambah margin atas untuk jarak dari header */
+                width: 100%;
+                /* Membuat gambar animasi penuh lebar */
+            }
+
+            .box {
+                height: 200px;
+                /* Sesuaikan tinggi gambar animasi */
+                width: 200px;
+                /* Sesuaikan lebar gambar animasi */
+            }
+        }
+
+        @keyframes animate {
+            0% {
+                border-radius: 60% 40% 30% 70%/60% 30% 70% 40%;
+            }
+
+            50% {
+                border-radius: 30% 60% 70% 40%/50% 60% 30% 60%;
+            }
+
+            100% {
+                border-radius: 60% 40% 30% 70%/60% 30% 70% 40%;
+            }
+        }
     </style>
 </head>
 
@@ -158,7 +233,7 @@
                     Us</a>
                 <button type="button"
                     class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    onclick="window.location.href='histogram.html';">
+                    onclick="window.location.href='process.html';">
                     Get Started
                 </button>
             </div>
@@ -185,7 +260,7 @@
                 <a href="#about"
                     class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">About
                     Us</a>
-                <a href="histogram.html"
+                <a href="process.html"
                     class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800">Get
                     Started</a>
             </div>
@@ -193,20 +268,28 @@
     </nav>
     <!-- End Navbar -->
 
-    <!-- Header Section -->
-    <section class="text-center bg-indigo-600 text-white py-20">
-        <h1 class="text-4xl font-bold mb-4">Upload, Proses, dan Temukan Keajaiban di Setiap Pixel</h1>
-        <p class="text-lg">Ingin mencoba berbagai teknik pengolahan citra seperti yang biasa digunakan dalam riset dan
-            pengembangan teknologi gambar? <br>CitraCraft memberikanmu alat yang mudah diakses untuk mengubah gambar
-            sesuai keinginanmu.</p>
-        <a href="histogram.html"
-            class="mt-8 inline-block bg-white text-indigo-600 px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100">Mulai
-            Sekarang</a>
+    <!-- Header Section and Image Animation Wrapper -->
+    <section class="flex justify-center items-center bg-indigo-600 text-white py-20 px-16">
+        <!-- Header Content -->
+        <div class="text-center">
+            <h1 class="text-4xl font-bold mb-4">Upload, Proses, dan Temukan Keajaiban di Setiap Pixel</h1>
+            <p class="text-lg">Ingin mencoba berbagai teknik pengolahan citra seperti yang biasa digunakan dalam riset
+                dan
+                pengembangan teknologi gambar? <br>CitraCraft memberikanmu alat yang mudah diakses untuk mengubah gambar
+                sesuai keinginanmu.</p>
+            <a href="process.html"
+                class="mt-8 inline-block bg-white text-indigo-600 px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100">Mulai
+                Sekarang</a>
+        </div>
+        <!-- Image Animation -->
+        <div class="wrapper ml-8"> <!-- Added margin for spacing -->
+            <div class="box"></div>
+        </div>
     </section>
-    <!-- End Header Section -->
+
 
     <!-- Features Section -->
-    <section class="py-20 bg-gray-100">
+    <section class="py-20 bg-gray-100" id="about">
         <div class="max-w-6xl mx-auto px-4 text-center">
             <h2 class="text-3xl font-bold text-indigo-600 mb-6">Kenapa CitraCraft?</h2>
             <div class="grid md:grid-cols-3 gap-8">

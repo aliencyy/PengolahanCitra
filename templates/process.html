@@ -27,7 +27,7 @@
                     Us</a>
                 <button type="button"
                     class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    onclick="window.location.href='histogram.html';">
+                    onclick="window.location.href='process.html';">
                     Get Started
                 </button>
             </div>
@@ -54,7 +54,7 @@
                 <a href="#about"
                     class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">About
                     Us</a>
-                <a href="histogram.html"
+                <a href="process.html"
                     class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800">Get
                     Started</a>
             </div>
@@ -90,13 +90,14 @@
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="rgb">RGB</option>
                     <option value="grayscale">Grayscale</option>
+                    <option value="edge_detection">Edge Detection</option>
                 </select>
 
                 <input type="submit" value="Upload"
                     class="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 cursor-pointer">
             </form>
 
-            <!--show image-->
+            <!-- Show Image -->
             {% if filename %}
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gray-600">Gambar yang diunggah:</h3>
@@ -123,10 +124,16 @@
                 <img src="data:image/png;base64,{{ equalized_img_data }}" alt="Equalized Image"
                     class="w-full rounded-lg shadow-md">
                 {% endif %}
+                </br>
+                <!-- Edge Detection Image -->
+                {% if edge_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Edge Detection Image:</h3>
+                <img src="data:image/png;base64,{{ edge_img_data }}" alt="Edge Detection Image"
+                    class="w-full rounded-lg shadow-md">
+                {% endif %}
             </div>
-
-
             {% endif %}
+
 
         </div>
     </div>

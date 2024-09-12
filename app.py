@@ -19,7 +19,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-@app.route('/histogram.html', methods=['GET', 'POST'])
+@app.route('/process.html', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -41,11 +41,13 @@ def upload_file():
             hist_img_base64 = None
             equalized_img_base64 = None
             equal_hist_img_base64 = None
+            edge_img_base64 = None  # Variable for edge detection image
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 hist = cv2.calcHist([gray_img], [0], None, [256], [0, 256])
 
+                # Histogram
                 plt.figure()
                 plt.plot(hist)
                 plt.title('Grayscale Histogram')
@@ -60,6 +62,7 @@ def upload_file():
                 hist_img.seek(0)
                 hist_img_base64 = base64.b64encode(hist_img.read()).decode('utf-8')
 
+                # Equalized Image
                 equalized_img = cv2.equalizeHist(gray_img)
                 hist = cv2.calcHist([equalized_img], [0], None, [256], [0, 256])
 
@@ -83,7 +86,7 @@ def upload_file():
                 equalized_img_io.seek(0)
                 equalized_img_base64 = base64.b64encode(equalized_img_io.read()).decode('utf-8')
 
-            else:
+            elif image_type == 'rgb':
                 color = ('b', 'g', 'r')
                 plt.figure()
                 for i, col in enumerate(color):
@@ -101,6 +104,7 @@ def upload_file():
                 hist_img.seek(0)
                 hist_img_base64 = base64.b64encode(hist_img.read()).decode('utf-8')
 
+                # Equalized Image
                 b, g, r = cv2.split(img)
                 b_eq = cv2.equalizeHist(b)
                 g_eq = cv2.equalizeHist(g)
@@ -129,10 +133,20 @@ def upload_file():
                 equalized_img_io.seek(0)
                 equalized_img_base64 = base64.b64encode(equalized_img_io.read()).decode('utf-8')
 
-            return render_template('histogram.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, image_type=image_type)
+            elif image_type == 'edge_detection':
+                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                edges = cv2.Canny(gray_img, 100, 200)
+
+                edge_img_pil = Image.fromarray(edges)
+                edge_img_io = BytesIO()
+                edge_img_pil.save(edge_img_io, format='PNG')
+                edge_img_io.seek(0)
+                edge_img_base64 = base64.b64encode(edge_img_io.read()).decode('utf-8')
+
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, image_type=image_type)
 
     filename = request.args.get('filename')
-    return render_template('histogram.html', filename=filename)
+    return render_template('process.html', filename=filename)
 
 @app.route('/')
 def homepage():
