@@ -141,9 +141,17 @@
                 {% endif %}
                 <!--Face Blurring-->
                 {% if face_blur_img_data %}
-                <h3 class="text-lg font-semibold text-gray-600">Face Blurring Image:</h3>
-                <img src="data:image/png;base64,{{ face_blur_img_data }}" alt="Face Blur Image"
-                    class="w-full rounded-lg shadow-md">   
+                <div class="mt-6">
+                    <label for="blurRange" class="block text-gray-700">Atur Tingkat Blur:</label>
+                    <input type="range" id="blurRange" name="blurRange" min="1" max="100" value="50" class="w-full" onchange="updateBlur(this.value)">
+                </div>
+                
+                <!-- Resulting blurred image -->
+                <div id="blurResult" class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-600">Hasil Face Blurring:</h3>
+                    <img id="blurredImage" src="data:image/png;base64,{{ face_blur_img_data }}" alt="Blurred Face Image"
+                         class="w-full rounded-lg shadow-md">
+                </div>  
                 {% endif %}
             </div>
             {% endif %}
@@ -158,6 +166,41 @@
         </div>
     </footer>
     <!-- End Footer Section -->
+
+    <script>
+        function updateBlur(blurValue) {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('blurRange', blurValue);
+            formData.append('filename', "{{ filename }}");  // Mengirim nama file yang diunggah
+    
+            xhr.open('POST', '/update_blur', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.updated_image) {
+                            document.getElementById('blurredImage').src = 'data:image/png;base64,' + response.updated_image;
+                        } else {
+                            console.error('Unexpected response format:', response);
+                        }
+                    } catch (e) {
+                        console.error('Invalid JSON response:', xhr.responseText);
+                    }
+                } else {
+                    console.error('Request failed with status:', xhr.status, 'Response:', xhr.responseText);
+                }
+            };
+    
+            xhr.send(formData);
+        }
+    </script>
+    
+        
+    
+    
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')  # Backend non-GUI untuk server
 
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, jsonify, render_template, request, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 import os
 import cv2
@@ -24,13 +24,13 @@ def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
-            return redirect(request.url)
+            return redirect(request.url),jsonify({'error': 'No file part'}), 400
         file = request.files['file']
         image_type = request.form.get('image_type')
 
         if file.filename == '':
             flash('No selected file')
-            return redirect(request.url)
+            return redirect(request.url),jsonify({'error': 'No selected file'}), 400
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -162,34 +162,86 @@ def upload_file():
                 face_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
             
             elif image_type == 'face_blurring':
+                slider_value = int(request.form.get('blurRange', 50))  # Default to 50 if not provided
+
+                # Define min and max kernel sizes
+                min_kernel_size = 0
+                max_kernel_size = 31
+
+                # Convert slider percentage (0 - 100) to kernel size
+                blur_value = min_kernel_size + (slider_value / 100) * (max_kernel_size - min_kernel_size)
+                blur_value = int(blur_value)  # Convert to integer
+                if blur_value % 2 == 0:
+                    blur_value += 1  # Ensure it's odd
+
                 face_cascade = cv2.CascadeClassifier('src/static/models/haarcascade_frontalface_default.xml')
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-                # Blur faces detected in the image
                 if len(faces) > 0:
                     for (x, y, w, h) in faces:
-                        # Get the face region
                         face = img[y:y+h, x:x+w]
-
-                        # Apply Gaussian blur to the face region
-                        blurred_face = cv2.GaussianBlur(face, (99, 99), 30)
-
-                        # Replace the original face with blurred face
+                        blurred_face = cv2.GaussianBlur(face, (blur_value, blur_value), 2)
                         img[y:y+h, x:x+w] = blurred_face
 
-                        # Convert the result to base64
-                        img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                        img_io = BytesIO()
-                        img_pil.save(img_io, format='PNG')
-                        img_io.seek(0)
-                        face_blur_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
-
+                # Convert the result to base64
+                img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                img_io = BytesIO()
+                img_pil.save(img_io, format='PNG')
+                img_io.seek(0)
+                face_blur_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
 
             return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 , image_type=image_type)
 
+
     filename = request.args.get('filename')
     return render_template('process.html', filename=filename)
+
+# Route untuk memperbarui tingkat blur
+@app.route('/update_blur', methods=['POST'])
+def update_blur():
+    filename = request.form.get('filename')
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    # Ensure the file exists
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    # Load the image
+    img = cv2.imread(file_path)
+
+    # Get the slider value
+    slider_value = int(request.form.get('blurRange', 50))  # Default to 50 if not provided
+
+    # Define min and max kernel sizes
+    min_kernel_size = 1
+    max_kernel_size = 31
+
+    # Convert slider percentage (0 - 100) to kernel size
+    blur_value = min_kernel_size + (slider_value / 100) * (max_kernel_size - min_kernel_size)
+    blur_value = int(blur_value)
+    if blur_value % 2 == 0:
+        blur_value += 1  # Ensure it's odd
+
+    # Detect faces and apply blur
+    face_cascade = cv2.CascadeClassifier('src/static/models/haarcascade_frontalface_default.xml')
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    if len(faces) > 0:
+        for (x, y, w, h) in faces:
+            face = img[y:y+h, x:x+w]
+            blurred_face = cv2.GaussianBlur(face, (blur_value, blur_value), 0)
+            img[y:y+h, x:x+w] = blurred_face
+
+    # Convert the result to base64
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    img_io = BytesIO()
+    img_pil.save(img_io, format='PNG')
+    img_io.seek(0)
+    face_blur_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+    return jsonify({'updated_image': face_blur_img_base64})
 
 @app.route('/')
 def homepage():
