@@ -44,6 +44,8 @@ def upload_file():
             edge_img_base64 = None  # Variable for edge detection image
             face_img_base64 = None  # Variable for face detection image
             face_blur_img_base64 = None  # Variable for face blurring image
+            blurred_background_img_base64 = None
+            segmentation_img_base64 = None
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -191,7 +193,49 @@ def upload_file():
                 img_io.seek(0)
                 face_blur_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
 
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 , image_type=image_type)
+            elif image_type == 'background_blurring':
+                # Create a mask for GrabCut
+                mask = np.zeros(img.shape[:2], np.uint8)
+                
+                # Define a rectangle for the initial GrabCut segmentation
+                # Adjust the rectangle (x, y, width, height) based on your image
+                rect = (10, 10, img.shape[1] - 10, img.shape[0] - 10)
+                
+                # Create a mask for the background and foreground
+                bgd_model = np.zeros((1, 65), np.float64)
+                fgd_model = np.zeros((1, 65), np.float64)
+                
+                # Apply GrabCut algorithm
+                cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+                
+                # Create a binary mask where foreground pixels are marked with 1
+                mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+                
+                # Blur the entire image
+                blurred_img = cv2.GaussianBlur(img, (21, 21), 0)
+
+                # Use the mask to keep the object in focus and blur the background
+                object_in_focus = img * mask2[:, :, np.newaxis]
+                background_blurred = blurred_img * (1 - mask2[:, :, np.newaxis])
+
+                # Combine the focused object and blurred background
+                final_img = object_in_focus + background_blurred
+
+                # Convert the segmentation result to base64 for rendering in HTML
+                segmentation_img_pil = Image.fromarray(cv2.cvtColor(object_in_focus, cv2.COLOR_BGR2RGB))
+                segmentation_img_io = BytesIO()
+                segmentation_img_pil.save(segmentation_img_io, format='PNG')
+                segmentation_img_io.seek(0)
+                segmentation_img_base64 = base64.b64encode(segmentation_img_io.read()).decode('utf-8')
+
+                # Convert the final blurred background image to base64 for rendering in HTML
+                final_img_pil = Image.fromarray(cv2.cvtColor(final_img, cv2.COLOR_BGR2RGB))
+                final_img_io = BytesIO()
+                final_img_pil.save(final_img_io, format='PNG')
+                final_img_io.seek(0)
+                blurred_background_img_base64 = base64.b64encode(final_img_io.read()).decode('utf-8')  
+
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64,image_type=image_type)
 
 
     filename = request.args.get('filename')

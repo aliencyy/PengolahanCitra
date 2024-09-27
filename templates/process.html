@@ -93,6 +93,7 @@
                     <option value="edge_detection">Edge Detection</option>
                     <option value="face_detection">Face Detection</option>
                     <option value="face_blurring">Face Blurring</option> 
+                    <option value="background_blurring">Background Blurring</option>
                 </select>
 
                 <input type="submit" value="Upload"
@@ -146,13 +147,27 @@
                     <input type="range" id="blurRange" name="blurRange" min="1" max="100" value="50" class="w-full" onchange="updateBlur(this.value)">
                 </div>
                 
-                <!-- Resulting blurred image -->
+                <!-- Resulting blurred image w slider -->
                 <div id="blurResult" class="mt-6">
                     <h3 class="text-lg font-semibold text-gray-600">Hasil Face Blurring:</h3>
                     <img id="blurredImage" src="data:image/png;base64,{{ face_blur_img_data }}" alt="Blurred Face Image"
                          class="w-full rounded-lg shadow-md">
                 </div>  
                 {% endif %}
+                <div class="columns-2">
+                <!-- Segmentation Image -->
+                {% if segmentation_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Segmentation Result:</h3>
+                <img src="data:image/png;base64,{{ segmentation_img_data }}" alt="Segmentation Image" class="w-full rounded-lg shadow-md">
+                {% endif %}
+
+                <!-- Blurred Background Image -->
+                {% if blurred_background_img_data %}
+                <h3 class="text-lg font-semibold text-gray-600">Blurred Background Image:</h3>
+                <img src="data:image/png;base64,{{ blurred_background_img_data }}" alt="Blurred Background Image" class="w-full rounded-lg shadow-md">
+                {% endif %}
+                </div>
+
             </div>
             {% endif %}
         </div>
