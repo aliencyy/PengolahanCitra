@@ -199,14 +199,16 @@ def upload_file():
                 
                 # Define a rectangle for the initial GrabCut segmentation
                 # Adjust the rectangle (x, y, width, height) based on your image
-                rect = (10, 10, img.shape[1] - 10, img.shape[0] - 10)
-                
+                # Coba optimalkan ukuran rect
+                rect = (int(img.shape[1] * 0.1), int(img.shape[0] * 0.1), 
+                        int(img.shape[1] * 0.8), int(img.shape[0] * 0.8))
+
                 # Create a mask for the background and foreground
                 bgd_model = np.zeros((1, 65), np.float64)
                 fgd_model = np.zeros((1, 65), np.float64)
                 
                 # Apply GrabCut algorithm
-                cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+                cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 7, cv2.GC_INIT_WITH_RECT)
                 
                 # Create a binary mask where foreground pixels are marked with 1
                 mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
