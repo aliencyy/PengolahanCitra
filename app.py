@@ -46,6 +46,8 @@ def upload_file():
             face_blur_img_base64 = None  # Variable for face blurring image
             blurred_background_img_base64 = None
             segmentation_img_base64 = None
+            vintage_sepia_img_base64 = None
+            harris_corner_img_base64 = None
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -237,7 +239,49 @@ def upload_file():
                 final_img_io.seek(0)
                 blurred_background_img_base64 = base64.b64encode(final_img_io.read()).decode('utf-8')  
 
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64,image_type=image_type)
+            elif image_type == 'vintage_sepia':
+                # Convert the image to sepia tone
+                img_sepia = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img_sepia = cv2.transform(img_sepia, np.matrix([[0.393, 0.769, 0.189],
+                                                                [0.349, 0.686, 0.168],
+                                                                [0.272, 0.534, 0.131]]))
+
+                # Add noise to enhance the vintage effect
+                # Generate Gaussian noise with lower intensity
+                noise = np.random.normal(0, 10, img_sepia.shape)  # mean=0, std=10 for lighter noise
+                noisy_img = img_sepia + noise
+
+                # Clip values to keep them within valid pixel range
+                noisy_img = np.clip(noisy_img, 0, 255).astype(np.uint8)
+
+                # Convert the result to base64
+                img_io = BytesIO()
+                img_pil = Image.fromarray(noisy_img)
+                img_pil.save(img_io, format='PNG')
+                img_io.seek(0)
+                vintage_sepia_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+            if image_type == 'harris_corner':
+                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                gray_img = np.float32(gray_img)
+
+                # Harris corner detection
+                dst = cv2.cornerHarris(gray_img, 2, 3, 0.04)
+
+                # Result is dilated for marking the corners
+                dst = cv2.dilate(dst, None)
+
+                # Thresholding to mark corners
+                img[dst > 0.01 * dst.max()] = [0, 0, 255]  # Mark corners in red
+
+                # Convert the result to base64
+                img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                img_io = BytesIO()
+                img_pil.save(img_io, format='PNG')
+                img_io.seek(0)
+                harris_corner_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64, image_type=image_type)
 
 
     filename = request.args.get('filename')
