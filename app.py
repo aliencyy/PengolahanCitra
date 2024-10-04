@@ -261,7 +261,7 @@ def upload_file():
                 img_io.seek(0)
                 vintage_sepia_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
 
-            if image_type == 'harris_corner':
+            elif image_type == 'harris_corner':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 gray_img = np.float32(gray_img)
 
@@ -280,6 +280,12 @@ def upload_file():
                 img_pil.save(img_io, format='PNG')
                 img_io.seek(0)
                 harris_corner_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+            elif image_type == 'perspective':
+                # Transformasi perspektif
+                flash('Silakan pilih 4 titik pada gambar untuk melakukan transformasi perspektif.')
+                return render_template('process.html', filename=filename, image_type=image_type)
+
 
             return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64, image_type=image_type)
 
@@ -332,6 +338,64 @@ def update_blur():
     face_blur_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
 
     return jsonify({'updated_image': face_blur_img_base64})
+
+@app.route('/perspective_transform', methods=['POST'])
+def perspective_transform():
+    data = request.get_json()
+    filename = data.get('filename')
+    points = data.get('points')
+
+    if filename and points:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        img = cv2.imread(file_path)
+
+        # Cek ukuran gambar
+        img_height, img_width = img.shape[:2]
+        if img_height < 200 or img_width < 200:
+            return jsonify({'error': 'Gambar terlalu kecil, silakan gunakan gambar dengan resolusi yang lebih tinggi.'}), 400
+
+        # Points from the user (source points)
+        src_points = np.float32([[points[0], points[1]],  # Kiri Atas
+                                  [points[2], points[3]],  # Kanan Atas
+                                  [points[4], points[5]],  # Kanan Bawah
+                                  [points[6], points[7]]])  # Kiri Bawah
+
+        # Hitung lebar dan tinggi baru dari titik sumber
+        width = int(max(np.linalg.norm(src_points[0] - src_points[1]), np.linalg.norm(src_points[2] - src_points[3])))
+        height = int(max(np.linalg.norm(src_points[0] - src_points[3]), np.linalg.norm(src_points[1] - src_points[2])))
+
+        # Batasan maksimum dan minimum
+        max_width = img.shape[1]  # Lebar gambar asli
+        max_height = img.shape[0]  # Tinggi gambar asli
+
+        # Batasi width dan height agar tidak melebihi ukuran gambar asli
+        width = min(width, max_width)
+        height = min(height, max_height)
+
+        # Tentukan batasan minimum
+        min_width, min_height = 100, 100
+        width = max(min(width, img.shape[1]), min_width)
+        height = max(min(height, img.shape[0]), min_height)
+
+        # Tentukan dst_points dengan ukuran baru
+        dst_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+
+        # Compute the perspective transform matrix
+        M = cv2.getPerspectiveTransform(src_points, dst_points)
+
+        # Apply the perspective transform to the image
+        transformed_img = cv2.warpPerspective(img, M, (width, height))
+
+        # Convert the transformed image to base64 to send back to the frontend
+        _, buffer = cv2.imencode('.png', transformed_img)
+        transformed_img_base64 = base64.b64encode(buffer).decode('utf-8')
+
+        return jsonify({'transformed_img_data': transformed_img_base64})
+
+    return jsonify({'error': 'Invalid data'}), 400
+
+
+
 
 @app.route('/')
 def homepage():

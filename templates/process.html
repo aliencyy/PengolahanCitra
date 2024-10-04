@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{{ url_for('static', filename='output.css') }}" rel="stylesheet">
     <title>Image Processor</title>
+    <style>
+        .point {
+            position: absolute;
+            width: 10px; /* Ukuran titik */
+            height: 10px;
+            background-color: red; /* Warna merah */
+            border-radius: 50%; /* Bentuk bulat */
+            transform: translate(-50%, -50%); /* Untuk memusatkan titik */
+        }
+    </style
 </head>
 
 <body class="bg-gray-100 text-gray-800" style="padding-top: 64px;">
@@ -96,6 +106,7 @@
                     <option value="background_blurring">Background Blurring</option>
                     <option value="vintage_sepia">Vintage Image</option>
                     <option value="harris_corner">Harris Corner</option>
+                    <option value="perspective">Perspective Transform</option>
                 </select>
 
                 <input type="submit" value="Upload"
@@ -185,6 +196,75 @@
                 <h3 class="text-lg font-semibold text-gray-600">Harris Corner:</h3>
                 <img src="data:image/png;base64,{{ harris_corner_img_data }}" alt="Harris Corner"
                     class="w-full rounded-lg shadow-md">
+                {% endif %}
+
+                {% if image_type == "perspective" %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-600">Gambar yang diunggah:</h3>
+                    <img id="uploaded-image" src="{{ url_for('static', filename='static/uploads/' + filename) }}" alt="Uploaded Image" class="mt-4 w-full rounded-lg shadow-lg">
+                    <p class="mt-2 text-sm text-gray-600">Klik 4 titik pada gambar untuk melakukan transformasi perspektif.<br/> nb: Klik secara berurutan<br/></p>
+                    <p><b>Hasil Transform: </b></p>
+            
+                    <!-- Script for selecting 4 points on the image -->
+                    <script>
+                        let points = [];
+            
+                        document.querySelector('img#uploaded-image').addEventListener('click', function(event) {
+                            const imgElement = event.target;
+                            const imgRect = imgElement.getBoundingClientRect(); // Ukuran gambar yang ditampilkan
+                            
+                            const x = event.clientX - imgRect.left;
+                            const y = event.clientY - imgRect.top;
+
+                            // Ukuran gambar yang asli
+                            const naturalWidth = imgElement.naturalWidth;
+                            const naturalHeight = imgElement.naturalHeight;
+
+                            // Skala gambar (dalam HTML dibanding ukuran asli)
+                            const scaleX = naturalWidth / imgRect.width;
+                            const scaleY = naturalHeight / imgRect.height;
+
+                            // Sesuaikan koordinat yang dipilih sesuai dengan skala gambar
+                            const adjustedX = x * scaleX;
+                            const adjustedY = y * scaleY;
+
+                            points.push({ x: adjustedX, y: adjustedY });
+
+            
+                            if (points.length === 4) {
+                                // Send points to the server for perspective transform
+                                fetch('/perspective_transform', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        filename: '{{ filename }}',
+                                        points: [
+                                            points[0].x, points[0].y,
+                                            points[1].x, points[1].y,
+                                            points[2].x, points[2].y,
+                                            points[3].x, points[3].y
+                                        ]
+                                    }),
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.transformed_img_data) {
+                                        document.querySelector('#transformed-image').src = 'data:image/png;base64,' + data.transformed_img_data;
+                                    }
+                                });
+            
+                                // Clear the points for the next click
+                                points = [];
+                            }
+                        });
+                        
+                    </script>
+            
+                    <!-- Add a placeholder to display the transformed image -->
+                    <img id="transformed-image" alt="Transformed Image" class="mt-4 w-full rounded-lg shadow-lg" />
+                </div>
                 {% endif %}
 
             </div>
