@@ -48,6 +48,7 @@ def upload_file():
             segmentation_img_base64 = None
             vintage_sepia_img_base64 = None
             harris_corner_img_base64 = None
+            morphed_img_base64 = None
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -287,7 +288,36 @@ def upload_file():
                 return render_template('process.html', filename=filename, image_type=image_type)
 
 
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64, image_type=image_type)
+            elif image_type == 'morphology':
+                morphology_type = request.form.get('morphology_type')
+                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                
+                kernel = np.ones((5, 5), np.uint8)  # Kernel ukuran 5x5 untuk operasi morphology
+
+                if morphology_type == 'dilation':
+                    morphed_img = cv2.dilate(gray_img, kernel, iterations=2)
+                    morph_description = "Gambar setelah dilation:"
+                elif morphology_type == 'erosion':
+                    morphed_img = cv2.erode(gray_img, kernel, iterations=2)
+                    morph_description = "Gambar setelah erosion:"
+                elif morphology_type == 'opening':
+                    morphed_img = cv2.morphologyEx(gray_img, cv2.MORPH_OPEN, kernel, iterations=2)
+                    morph_description = "Gambar setelah opening:"
+                elif morphology_type == 'closing':
+                    morphed_img = cv2.morphologyEx(gray_img, cv2.MORPH_CLOSE, kernel, iterations=3)
+                    morph_description = "Gambar setelah closing:"
+                else:
+                    morph_description = "Invalid morphological operation."
+                
+                # Konversi gambar morfologi menjadi base64 untuk ditampilkan
+                morphed_img_pil = Image.fromarray(morphed_img)
+                morphed_img_io = BytesIO()
+                morphed_img_pil.save(morphed_img_io, format='PNG')
+                morphed_img_io.seek(0)
+                morphed_img_base64 = base64.b64encode(morphed_img_io.read()).decode('utf-8')
+
+
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64, image_type=image_type)
 
 
     filename = request.args.get('filename')

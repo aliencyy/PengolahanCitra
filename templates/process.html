@@ -96,7 +96,7 @@
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
 
                 <label for="image_type" class="block text-gray-700">Tipe Gambar:</label>
-                <select id="image_type" name="image_type"
+                <select id="image_type" name="image_type" onchange="toggleMorphologyOptions()"
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="rgb">RGB Histogram</option>
                     <option value="grayscale">Grayscale Histogram</option>
@@ -107,7 +107,19 @@
                     <option value="vintage_sepia">Vintage Image</option>
                     <option value="harris_corner">Harris Corner</option>
                     <option value="perspective">Perspective Transform</option>
+                    <option value="morphology">Morphology</option>
                 </select>
+
+                <div id="morphology_options" style="display: none;">
+                    <label for="morphology_type" class="block text-gray-700">Morphology Type:</label>
+                    <select id="morphology_type" name="morphology_type"
+                        class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="dilation">Dilation</option>
+                        <option value="erosion">Erosion</option>
+                        <option value="opening">Opening</option>
+                        <option value="closing">Closing</option>
+                    </select>
+                </div>
 
                 <input type="submit" value="Upload"
                     class="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 cursor-pointer">
@@ -267,6 +279,15 @@
                 </div>
                 {% endif %}
 
+                <!-- Morph -->
+                {% if morph_description %}
+                    <p class="text-lg font-semibold text-gray-600">{{ morph_description }}</p>
+                {% endif %}
+                {% if morphed_img_data %}
+                    <img src="data:image/png;base64,{{ morphed_img_data }}" alt="Morphed Image"
+                    class="w-full rounded-lg shadow-md mb-4">
+                {% endif %}
+
             </div>
             {% endif %}
         </div>
@@ -309,6 +330,17 @@
             };
 
             xhr.send(formData);
+        }
+
+        function toggleMorphologyOptions() {
+            var imageType = document.getElementById("image_type").value;
+            var morphologyOptions = document.getElementById("morphology_options");
+
+            if (imageType === "morphology") {
+                morphologyOptions.style.display = "block";
+            } else {
+                morphologyOptions.style.display = "none";
+            }
         }
     </script>
 
