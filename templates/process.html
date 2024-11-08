@@ -96,7 +96,7 @@
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
 
                 <label for="image_type" class="block text-gray-700">Tipe Gambar:</label>
-                <select id="image_type" name="image_type" onchange="toggleMorphologyOptions()"
+                <select id="image_type" name="image_type" onchange="toggleOptions()"
                     class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="rgb">RGB Histogram</option>
                     <option value="grayscale">Grayscale Histogram</option>
@@ -108,17 +108,34 @@
                     <option value="harris_corner">Harris Corner</option>
                     <option value="perspective">Perspective Transform</option>
                     <option value="morphology">Morphology</option>
+                    <option value="scaling">Scaling</option>
                 </select>
 
                 <div id="morphology_options" style="display: none;">
                     <label for="morphology_type" class="block text-gray-700">Morphology Type:</label>
-                    <select id="morphology_type" name="morphology_type"
+                    <select id="morphology_type" name="morphology_type" 
                         class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="dilation">Dilation</option>
                         <option value="erosion">Erosion</option>
                         <option value="opening">Opening</option>
                         <option value="closing">Closing</option>
                     </select>
+                </div>
+
+                <!-- Opsi Scaling: Interpolasi dan Skala -->
+                <div id="scaling-options" style="display: none; margin-top: 20px;">
+                    <label for="interpolation" class="block text-gray-700">Interpolation:</label>
+                    <select id="interpolation" name="interpolation"
+                            class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="nearest">Nearest Neighbor</option>
+                        <option value="bilinear">Bilinear</option>
+                        <option value="bicubic">Bicubic</option>
+                        <option value="compare_all">Compare All</option>
+                    </select>
+
+                    <label for="scale_factor" class="block text-gray-700 mt-4">Scale Factor:</label>
+                    <input type="number" id="scale_factor" name="scale_factor" step="0.1" min="0.1" max="5.0" value="1.0"
+                        class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
                 <input type="submit" value="Upload"
@@ -130,7 +147,7 @@
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gray-600">Gambar yang diunggah:</h3>
                 <img src="{{ url_for('static', filename='static/uploads/' + filename) }}" alt="Uploaded Image"
-                    class="mt-4 w-full rounded-lg shadow-lg">
+                    class="mt-4 rounded-lg shadow-lg">
                 </br>
                 <!-- Histogram -->
                 {% if hist_img_data %}
@@ -288,6 +305,21 @@
                     class="w-full rounded-lg shadow-md mb-4">
                 {% endif %}
 
+                <!-- Display Scaled Images -->
+                {% if scaling_images %}
+                    <h3 class="text-lg font-semibold text-gray-600 mt-6 mb-6">Scaled Images:</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                        {% for method, img_data in scaling_images %}
+                            <div class="text-center mt-6">
+                                <h4 class="font-semibold text-gray-700">{{ method|capitalize }} Interpolation</h4>
+                                <img src="data:image/png;base64,{{ img_data }}" alt="{{ method }} Interpolated Image"
+                                    class="mt-2 rounded-lg shadow-md">
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+
             </div>
             {% endif %}
         </div>
@@ -342,11 +374,34 @@
                 morphologyOptions.style.display = "none";
             }
         }
+
+        function toggleScalingOptions() {
+            const scalingOptions = document.getElementById('scaling-options');
+            const imageType = document.getElementById('image_type').value;
+            scalingOptions.style.display = imageType === 'scaling' ? 'block' : 'none';
+        }
+
+        function toggleOptions() {
+            const imageType = document.getElementById("image_type").value;
+            const morphologyOptions = document.getElementById("morphology_options");
+            const scalingOptions = document.getElementById("scaling-options");
+
+            // Tampilkan opsi morphology jika tipe gambar adalah "morphology"
+            if (imageType === "morphology") {
+                morphologyOptions.style.display = "block";
+            } else {
+                morphologyOptions.style.display = "none";
+            }
+
+            // Tampilkan opsi scaling jika tipe gambar adalah "scaling"
+            if (imageType === "scaling") {
+                scalingOptions.style.display = "block";
+            } else {
+                scalingOptions.style.display = "none";
+            }
+        }
     </script>
-
-
-
-
+    
 </body>
 
 </html>

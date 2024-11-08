@@ -27,6 +27,8 @@ def upload_file():
             return redirect(request.url),jsonify({'error': 'No file part'}), 400
         file = request.files['file']
         image_type = request.form.get('image_type')
+        interpolation_method = request.form.get('interpolation')
+        scale_factor = float(request.form.get('scale_factor', 1.0))
 
         if file.filename == '':
             flash('No selected file')
@@ -49,6 +51,8 @@ def upload_file():
             vintage_sepia_img_base64 = None
             harris_corner_img_base64 = None
             morphed_img_base64 = None
+            scaled_images_data = [] 
+            morph_description = None
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -317,7 +321,32 @@ def upload_file():
                 morphed_img_base64 = base64.b64encode(morphed_img_io.read()).decode('utf-8')
 
 
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64, image_type=image_type)
+            elif image_type == 'scaling':
+                interpolation = {
+                    'nearest': cv2.INTER_NEAREST,
+                    'bilinear': cv2.INTER_LINEAR,
+                    'bicubic': cv2.INTER_CUBIC,
+                }
+                resized_images = []
+                interpolation_method = request.form.get('interpolation')
+                scale_factor = float(request.form.get('scale_factor'))
+                
+                if interpolation_method == 'compare_all':
+                    for method_name, interp_type in interpolation.items():
+                        scaled_img = cv2.resize(img, (0, 0), fx=scale_factor, fy=scale_factor, interpolation=interp_type)
+                        resized_images.append((method_name, scaled_img))
+                else:
+                    interp_type = interpolation.get(interpolation_method, cv2.INTER_LINEAR)
+                    scaled_img = cv2.resize(img, (0, 0), fx=scale_factor, fy=scale_factor, interpolation=interp_type)
+                    resized_images.append((interpolation_method, scaled_img))
+
+                # Convert resized images to base64 for HTML display
+                scaled_images_data = []
+                for method_name, resized_img in resized_images:
+                    _, buffer = cv2.imencode('.png', resized_img)
+                    img_base64 = base64.b64encode(buffer).decode('utf-8')
+                    scaled_images_data.append((method_name, img_base64))
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64,scaling_images=scaled_images_data, image_type=image_type)
 
 
     filename = request.args.get('filename')
