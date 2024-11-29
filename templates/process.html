@@ -15,7 +15,7 @@
             border-radius: 50%; /* Bentuk bulat */
             transform: translate(-50%, -50%); /* Untuk memusatkan titik */
         }
-    </style
+    </style>
 </head>
 
 <body class="bg-gray-100 text-gray-800" style="padding-top: 64px;">
@@ -109,6 +109,7 @@
                     <option value="perspective">Perspective Transform</option>
                     <option value="morphology">Morphology</option>
                     <option value="scaling">Scaling</option>
+                    <option value="restoration">Restoration</option>
                 </select>
 
                 <div id="morphology_options" style="display: none;">
@@ -135,7 +136,31 @@
 
                     <label for="scale_factor" class="block text-gray-700 mt-4">Scale Factor:</label>
                     <input type="number" id="scale_factor" name="scale_factor" step="0.1" min="0.1" max="5.0" value="1.0"
+                        class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"> 
+                </div>
+
+                <!-- Restoration Noise -->
+                <div id="restoration_noise_options" style="display: none;">
+                    <label for="restoration_noise" class="block text-gray-700">Restoration Noise:</label>
+                    <select id="restoration_noise" name="restoration_noise" 
                         class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="salt_and_pepper_noise">Salt and Pepper Noise</option>
+                        <option value="gaussian_noise">Gaussian Noise</option>
+                        <option value="speckle_noise">Speckle Noise</option>
+                        <option value="periodic_noise">Periodic Noise</option>
+                    </select>
+                </div>
+
+                <!-- Restoration Type -->
+                <div id="restoration_type_options" style="display: none;">
+                    <label for="restoration_type" class="block text-gray-700">Restoration Type:</label>
+                    <select id="restoration_type" name="restoration_type" 
+                        class="block w-full text-gray-700 py-2 px-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="lowpass_filtering">Lowpass Filtering</option>
+                        <option value="median_filtering">Median Filtering</option>
+                        <option value="rankorder_filtering">Rank-Order Filtering</option>
+                        <option value="outlier_method">Outlier Method</option>
+                    </select>
                 </div>
 
                 <input type="submit" value="Upload"
@@ -385,6 +410,8 @@
             const imageType = document.getElementById("image_type").value;
             const morphologyOptions = document.getElementById("morphology_options");
             const scalingOptions = document.getElementById("scaling-options");
+            const restorationNoiseOptions = document.getElementById("restoration_noise_options");
+            const restorationTypeOptions = document.getElementById("restoration_type_options");
 
             // Tampilkan opsi morphology jika tipe gambar adalah "morphology"
             if (imageType === "morphology") {
@@ -398,6 +425,15 @@
                 scalingOptions.style.display = "block";
             } else {
                 scalingOptions.style.display = "none";
+            }
+
+            // Tampilkan opsi restorasi dan noise jika tipe gambar adalah "restoration"
+            if (imageType === "restoration") {
+                restorationNoiseOptions.style.display = "block";
+                restorationTypeOptions.style.display = "block";
+            } else {
+                restorationNoiseOptions.style.display = "none";
+                restorationTypeOptions.style.display = "none";
             }
         }
     </script>

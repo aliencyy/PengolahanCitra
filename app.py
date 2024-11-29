@@ -291,7 +291,6 @@ def upload_file():
                 flash('Silakan pilih 4 titik pada gambar untuk melakukan transformasi perspektif.')
                 return render_template('process.html', filename=filename, image_type=image_type)
 
-
             elif image_type == 'morphology':
                 morphology_type = request.form.get('morphology_type')
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -320,7 +319,6 @@ def upload_file():
                 morphed_img_io.seek(0)
                 morphed_img_base64 = base64.b64encode(morphed_img_io.read()).decode('utf-8')
 
-
             elif image_type == 'scaling':
                 interpolation = {
                     'nearest': cv2.INTER_NEAREST,
@@ -346,8 +344,55 @@ def upload_file():
                     _, buffer = cv2.imencode('.png', resized_img)
                     img_base64 = base64.b64encode(buffer).decode('utf-8')
                     scaled_images_data.append((method_name, img_base64))
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64,scaling_images=scaled_images_data, image_type=image_type)
+            
+            # Menangani jenis restorasi
+            if image_type == 'restoration':
+                restoration_noise = request.form.get('restoration_noise')
+                restoration_type = request.form.get('restoration_type')
 
+                # Tambahkan noise sesuai pilihan
+                if restoration_noise == 'salt_and_pepper_noise':
+                    noise = np.random.choice([0, 255], img.shape, p=[0.95, 0.05]).astype(np.uint8)
+                    img = cv2.add(img, noise)
+
+                elif restoration_noise == 'gaussian_noise':
+                    gaussian_noise = np.random.normal(0, 25, img.shape).astype(np.uint8)
+                    img = cv2.add(img, gaussian_noise)
+
+                elif restoration_noise == 'speckle_noise':
+                    speckle_noise = np.random.randn(*img.shape) * 25
+                    img = img + img * speckle_noise
+
+                elif restoration_noise == 'periodic_noise':
+                    rows, cols, _ = img.shape
+                    x = np.linspace(0, 2 * np.pi, cols)
+                    y = np.linspace(0, 2 * np.pi, rows)
+                    X, Y = np.meshgrid(x, y)
+                    periodic_noise = (np.sin(X * 10) + np.sin(Y * 10)) * 25
+                    img = cv2.add(img, periodic_noise.astype(np.uint8))
+
+                # Terapkan restorasi sesuai pilihan
+                if restoration_type == 'lowpass_filtering':
+                    img = cv2.GaussianBlur(img, (5, 5), 0)
+
+                elif restoration_type == 'median_filtering':
+                    img = cv2.medianBlur(img, 5)
+
+                elif restoration_type == 'rankorder_filtering':
+                    # Menggunakan median filter sebagai contoh
+                    img = cv2.medianBlur(img, 5)
+
+                elif restoration_type == 'outlier_method':
+                    # Contoh sederhana menggunakan bilateral filter
+                    img = cv2.bilateralFilter(img, 9, 75, 75)
+
+            # Konversi gambar hasil ke base64 untuk ditampilkan
+            img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+            img_io = BytesIO()
+            img_pil.save(img_io, format='PNG')
+            img_io.seek(0)
+            restored_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64,scaling_images=scaled_images_data, restored_img_data=restored_img_base64, image_type=image_type)
 
     filename = request.args.get('filename')
     return render_template('process.html', filename=filename)
