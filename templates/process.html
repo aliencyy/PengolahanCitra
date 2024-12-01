@@ -19,59 +19,60 @@
 </head>
 
 <body class="bg-gray-100 text-gray-800" style="padding-top: 64px;">
-    <!-- Navbar -->
-    <nav class="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 border-b border-gray-200 dark:border-gray-600">
-        <div class="max-w-screen-xl mx-auto px-4 py-4 flex items-center justify-between">
-            <!-- Logo -->
-            <a href="{{ url_for('homepage') }}" class="flex items-center space-x-3">
-                <img src="https://flowbite.com/docs/images/logo.svg" class="h-8" alt="Flowbite Logo">
-                <span class="text-2xl font-semibold dark:text-white">CitraCraft</span>
-            </a>
-
-            <!-- Menu items - hidden on small screens -->
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{{ url_for('homepage') }}"
-                    class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">Home</a>
-                <a href="#about"
-                    class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">About
-                    Us</a>
-                <button type="button"
-                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    onclick="window.location.href='process.html';">
-                    Get Started
-                </button>
+        <!-- Navbar -->
+        <nav class="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 border-b border-gray-200 dark:border-gray-600">
+            <div class="max-w-screen-xl mx-auto px-4 py-4 flex items-center justify-between">
+                <!-- Logo -->
+                <a href="{{ url_for('homepage') }}" class="flex items-center space-x-3">
+                    <img src="https://flowbite.com/docs/images/logo.svg" class="h-8" alt="Flowbite Logo">
+                    <span class="text-2xl font-semibold dark:text-white">CitraCraft</span>
+                </a>
+    
+                <!-- Menu items - hidden on small screens -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{{ url_for('homepage') }}"
+                        class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">Home</a>
+                    <a href="#about"
+                        class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">About
+                        Us</a>
+                        <a href="{{ url_for('huffman') }}"
+                        class="text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 font-medium">Huffman Code</a>
+                    <button type="button"
+                        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                        onclick="window.location.href='process.html';">
+                        Get Started
+                    </button>
+                </div>
+    
+                <!-- Hamburger menu button -->
+                <div class="md:hidden">
+                    <button type="button"
+                        class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg focus:outline-none"
+                        aria-controls="mobile-menu" aria-expanded="false">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-
-            <!-- Hamburger menu button -->
-            <div class="md:hidden">
-                <button type="button"
-                    class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-lg focus:outline-none"
-                    aria-controls="mobile-menu" aria-expanded="false">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+    
+            <!-- Mobile menu -->
+            <div class="md:hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="homepage.html"
+                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
+                    <a href="#about"
+                        class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">About
+                        Us</a>
+                    <a href="process.html"
+                        class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800">Get
+                        Started</a>
+                </div>
             </div>
-        </div>
-
-        <!-- Mobile menu -->
-        <div class="md:hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="homepage.html"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">Home</a>
-                <a href="#about"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">About
-                    Us</a>
-                <a href="process.html"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-700 hover:bg-blue-800">Get
-                    Started</a>
-            </div>
-        </div>
-    </nav>
-    <!-- End Navbar -->
-
+        </nav>
+        <!-- End Navbar -->
     <!-- Main content -->
     <div class="container mx-auto py-12">
         <h1 class="text-4xl font-bold text-center text-blue-500 mb-8">Image Processor</h1>

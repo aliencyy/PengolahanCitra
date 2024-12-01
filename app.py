@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 from PIL import Image
+from scipy import ndimage
+import networkx as nx
+from collections import Counter
+import heapq
 
 app = Flask(__name__, static_folder='src', static_url_path='')
 app.secret_key = 'your_secret_key'
@@ -53,7 +57,7 @@ def upload_file():
             morphed_img_base64 = None
             scaled_images_data = [] 
             morph_description = None
-            restored_img_base64 = None
+            noise_img_base64 = None
             restored_img_base64 = None
 
             if image_type == 'grayscale':
@@ -507,8 +511,435 @@ def perspective_transform():
 
     return jsonify({'error': 'Invalid data'}), 400
 
+class Node:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+
+    def __lt__(self, other):
+        return self.freq < other.freq
 
 
+# Build Huffman Tree
+def build_huffman_tree(data):
+    if not data:
+        return None
+
+    frequency = Counter(data)
+    heap = [Node(char, freq) for char, freq in frequency.items()]
+    heapq.heapify(heap)
+
+    while len(heap) > 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        merged = Node(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
+        heapq.heappush(heap, merged)
+
+    return heap[0]  # Root of the tree
+
+
+# Generate Huffman Codes
+def generate_huffman_codes(root, current_code="", codes={}):
+    if root is None:
+        return
+
+    if root.char is not None:  # Leaf node
+        codes[root.char] = current_code
+
+    generate_huffman_codes(root.left, current_code + "0", codes)
+    generate_huffman_codes(root.right, current_code + "1", codes)
+
+    return codes
+
+
+# Draw Huffman Tree with matplotlib and networkx
+def draw_huffman_tree(root):
+    def add_edges(graph, node, parent=None, label=""):
+        if node:
+            node_label = f"{node.char} ({node.freq})" if node.char else f"{node.freq}"
+            graph.add_node(id(node), label=node_label)
+
+            if parent:
+                graph.add_edge(id(parent), id(node), label=label)
+
+            add_edges(graph, node.left, node, "0")
+            add_edges(graph, node.right, node, "1")
+
+    def hierarchy_pos(G, root, width=1.0, vert_gap=0.2, vert_loc=0, xcenter=0.5):
+        """
+        Generate a hierarchical layout for tree-like graphs.
+        """
+        pos = {root: (xcenter, vert_loc)}
+        children = list(G.successors(root))
+        if not children:
+            return pos
+        dx = width / len(children)
+        nextx = xcenter - width / 2 - dx / 2
+        for child in children:
+            nextx += dx
+            pos.update(
+                hierarchy_pos(
+                    G, child, width=dx, vert_gap=vert_gap, vert_loc=vert_loc - vert_gap, xcenter=nextx
+                )
+            )
+        return pos
+
+    G = nx.DiGraph()
+    add_edges(G, root)
+
+    # Posisi node dalam tata letak hierarkis
+    pos = hierarchy_pos(G, id(root))
+    labels = nx.get_node_attributes(G, 'label')
+    edge_labels = nx.get_edge_attributes(G, 'label')
+
+    # Plot graf menggunakan matplotlib
+    plt.figure(figsize=(12, 8))
+    nx.draw(G, pos, with_labels=False, node_size=2000, node_color='skyblue', font_size=10, arrows=True)
+    nx.draw_networkx_labels(G, pos, labels=labels, font_size=12, font_color='black')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10)
+    plt.title("Huffman Tree")
+    plt.axis("off")
+
+    # Simpan grafik ke file
+    tree_image_path = os.path.join(app.config['UPLOAD_FOLDER'], "huffman_tree.png")
+    plt.savefig(tree_image_path, format="png")
+    plt.close()
+
+    return "static/uploads/huffman_tree.png"
+
+
+# Huffman route
+@app.route('/huffman', methods=['GET', 'POST'])
+def huffman():
+    if request.method == 'POST':
+        text_to_compress = request.form.get('text_to_compress', '')
+        if not text_to_compress:
+            flash("Teks tidak boleh kosong!")
+            return redirect(url_for('huffman'))
+
+        # Huffman Coding
+        root = build_huffman_tree(text_to_compress)
+        huffman_dict = generate_huffman_codes(root)
+        encoded_data = "".join(huffman_dict[char] for char in text_to_compress)
+        decoded_data = text_to_compress  # Decoded langsung sama dengan input
+
+        # Generate Huffman Tree Image
+        huffman_tree_image = draw_huffman_tree(root)
+
+        return render_template(
+            'huffman.html',
+            original_text=text_to_compress,
+            encoded_data=encoded_data,
+            decoded_data=decoded_data,
+            huffman_dict=huffman_dict,
+            huffman_tree_image=huffman_tree_image
+        )
+
+    return render_template('huffman.html')
+
+
+def add_noise(image, noise_type):
+    """Tambahkan noise ke gambar"""
+    if noise_type == 'salt_and_pepper':  
+        # Salt and Pepper Noise menggunakan metode impulse noise  
+        # Buat noise dengan ukuran sama dengan gambar asli  
+        impulse_noise = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8) 
+        
+        # Gunakan threshold untuk membuat noise biner  
+        # Anda bisa sesuaikan parameter threshold  
+        ret, impulse_noise = cv2.threshold(  
+            np.random.randint(0, 256, image.shape, dtype=np.uint8),   
+            250,  # Threshold tinggi   
+            255,  # Nilai maksimum  
+            cv2.THRESH_BINARY  
+        )  
+        
+        # Kurangi intensitas noise  
+        impulse_noise = (impulse_noise * 0.5).astype(np.uint8)  
+        
+        # Tambahkan noise ke gambar asli  
+        noisy_image = cv2.add(image, impulse_noise)  
+        
+        return noisy_image 
+    
+    if noise_type == 'gaussian':  
+        # Buat array kosong dengan ukuran sama persis dengan gambar  
+        # Ini akan menjadi tempat kita membuat noise  
+        noise = np.zeros(image.shape[:2], dtype=np.uint8)  
+        
+        # Membuat noise Gaussian menggunakan cv2.randn()  
+        # Parameter:  
+        # - noise: array yang akan diisi noise  
+        # - 255: mean (pusat distribusi noise)  
+        # - 150: standar deviasi (sebaran noise)  
+        cv2.randn(noise, 255, 150)  
+        
+        # Kurangi intensitas noise dengan mengalikan 0.5  
+        # Ini membuat noise tidak terlalu kuat  
+        noise = (noise * 0.5).astype(np.uint8)  
+        
+        # Untuk gambar berwarna (RGB)  
+        if len(image.shape) == 3:  
+            # Buat salinan gambar  
+            noisy_image = image.copy()  
+            
+            # Tambahkan noise ke setiap channel warna  
+            for i in range(image.shape[2]):  
+                noisy_image[:,:,i] = cv2.add(noisy_image[:,:,i], noise)  
+            
+            return noisy_image  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Tambahkan noise langsung ke gambar  
+            return cv2.add(image, noise)  
+    
+    if noise_type == 'speckle':  
+        # Implementasi Speckle Noise yang lebih komprehensif  
+        
+        # Untuk gambar berwarna (multi-channel)  
+        if len(image.shape) == 3:  
+            noisy_image = image.copy().astype(np.float32)  
+            
+            # Generate noise untuk setiap channel  
+            for i in range(image.shape[2]):  
+                # Buat noise Gaussian dengan mean 0 dan standar deviasi 0.1  
+                noise = np.random.normal(0, 0.1, image.shape[:2])  
+                
+                # Terapkan noise multiplicative  
+                # Pixel baru = Pixel asli * (1 + noise)  
+                noisy_image[:,:,i] = noisy_image[:,:,i] * (1 + noise)  
+            
+            # Clip nilai antara 0-255 dan kembalikan ke uint8  
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Konversi ke float32 untuk perhitungan  
+            noisy_image = image.astype(np.float32)  
+            
+            # Buat noise Gaussian dengan mean 0 dan standar deviasi 0.1  
+            noise = np.random.normal(0, 0.1, image.shape)  
+            
+            # Terapkan noise multiplicative  
+            # Pixel baru = Pixel asli * (1 + noise)  
+            noisy_image = noisy_image * (1 + noise)  
+            
+            # Clip nilai antara 0-255 dan kembalikan ke uint8  
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)  
+    
+    if noise_type == 'periodic':  
+        # Untuk gambar berwarna (multi-channel)  
+        if len(image.shape) == 3:  
+            noisy_image = image.copy().astype(np.float32)  
+            
+            # Generate periodic noise untuk setiap channel  
+            for channel in range(image.shape[2]):  
+                # Buat noise periodic dengan beberapa frekuensi  
+                noise = np.zeros_like(image[:,:,channel], dtype=np.float32)  
+                
+                # Beberapa variasi frekuensi untuk mensimulasikan interferensi  
+                frequencies = [  
+                    (32, 50),   # Frekuensi horizontal  
+                    (64, 30),   # Frekuensi vertikal  
+                    (16, 40)    # Frekuensi diagonal  
+                ]  
+                
+                for freq, amplitude in frequencies:  
+                    for i in range(noise.shape[0]):  
+                        for j in range(noise.shape[1]):  
+                            # Kombinasi fungsi sinusoidal  
+                            noise[i, j] += amplitude * np.sin(2 * np.pi * j / freq)  
+                
+                # Tambahkan noise ke channel  
+                noisy_image[:,:,channel] = cv2.add(  
+                    noisy_image[:,:,channel],   
+                    noise  
+                )  
+            
+            # Clip dan kembalikan ke uint8  
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Konversi ke float32  
+            noisy_image = image.astype(np.float32)  
+            
+            # Buat noise periodic  
+            noise = np.zeros_like(image, dtype=np.float32)  
+            
+            # Beberapa variasi frekuensi untuk mensimulasikan interferensi  
+            frequencies = [  
+                (32, 50),   # Frekuensi horizontal  
+                (64, 30),   # Frekuensi vertikal  
+                (16, 40)    # Frekuensi diagonal  
+            ]  
+            
+            for freq, amplitude in frequencies:  
+                for i in range(noise.shape[0]):  
+                    for j in range(noise.shape[1]):  
+                        # Kombinasi fungsi sinusoidal  
+                        noise[i, j] += amplitude * np.sin(2 * np.pi * j / freq)  
+            
+            # Tambahkan noise ke gambar  
+            noisy_image = cv2.add(noisy_image, noise)  
+            
+            # Clip dan kembalikan ke uint8  
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)  
+    
+def restore_image(noisy_image, restoration_type):  
+    """Pulihkan gambar dengan metode tertentu"""  
+    if restoration_type == 'lowpass':  
+        # Lowpass Filtering menggunakan uniform filter  
+        
+        # Untuk gambar berwarna (multi-channel)  
+        if len(noisy_image.shape) == 3:  
+            # Buat salinan gambar  
+            restored_image = noisy_image.copy()  
+            
+            # Proses setiap channel  
+            for i in range(noisy_image.shape[2]):  
+                # Terapkan uniform filter  
+                restored_image[:,:,i] = ndimage.uniform_filter(  
+                    noisy_image[:,:,i],   
+                    size=7  # Ukuran filter, bisa disesuaikan  
+                )  
+            
+            return restored_image  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Terapkan uniform filter  
+            return ndimage.uniform_filter(noisy_image, size=7)   
+    
+    elif restoration_type == 'median':  
+        # Median Filtering  
+        return cv2.medianBlur(noisy_image, 7)  
+    
+    if restoration_type == 'rank_order':  
+        # Rank-Order Filtering menggunakan median filter dengan footprint khusus  
+        
+        # Definisikan footprint cross  
+        cross = np.array([  
+            [0, 1, 0],  
+            [1, 1, 1],  
+            [0, 1, 0]  
+        ])  
+        
+        # Untuk gambar berwarna (multi-channel)  
+        if len(noisy_image.shape) == 3:  
+            # Buat salinan gambar  
+            restored_image = noisy_image.copy()  
+            
+            # Proses setiap channel  
+            for i in range(noisy_image.shape[2]):  
+                # Terapkan median filter dengan footprint cross  
+                restored_image[:,:,i] = ndimage.median_filter(  
+                    noisy_image[:,:,i],   
+                    footprint=cross  
+                )  
+            
+            return restored_image  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Terapkan median filter dengan footprint cross  
+            return ndimage.median_filter(noisy_image, footprint=cross)  
+    
+    if restoration_type == 'outlier':  
+        # Definisikan kernel average  
+        av = np.array([  
+            [0, 1, 0],  
+            [1, 1, 1],  
+            [0, 1, 0]  
+        ]) / 8.0  
+        
+        # Threshold untuk mendeteksi outlier  
+        D = 0.2  
+        
+        # Untuk gambar berwarna (multi-channel)  
+        if len(noisy_image.shape) == 3:  
+            # Buat salinan gambar  
+            restored_image = noisy_image.copy().astype(np.float32) / 255.0  
+            restored_channels = []  
+            
+            # Proses setiap channel  
+            for channel in cv2.split(restored_image):  
+                # Konvolusi dengan kernel average  
+                image_sp_av = ndimage.convolve(channel, av)  
+                
+                # Deteksi outlier  
+                r = (np.abs(channel - image_sp_av) > D).astype(float)  
+                
+                # Rekonstruksi gambar  
+                restored_channel = r * image_sp_av + (1 - r) * channel  
+                restored_channels.append(restored_channel)  
+            
+            # Gabungkan channel dan kembalikan ke uint8  
+            restored_image = cv2.merge(restored_channels)  
+            return (restored_image * 255).astype(np.uint8)  
+        
+        # Untuk gambar hitam putih (single channel)  
+        else:  
+            # Konversi ke float  
+            channel = noisy_image.astype(np.float32) / 255.0  
+            
+            # Konvolusi dengan kernel average  
+            image_sp_av = ndimage.convolve(channel, av)  
+            
+            # Deteksi outlier  
+            r = (np.abs(channel - image_sp_av) > D).astype(float)  
+            
+            # Rekonstruksi gambar  
+            restored_channel = r * image_sp_av + (1 - r) * channel  
+            
+            # Kembalikan ke uint8  
+            return (restored_channel * 255).astype(np.uint8)  
+
+@app.route('/restoration', methods=['GET', 'POST'])
+def restoration():
+    if request.method == 'POST':
+        uploaded_file = request.files.get('image')
+
+        if uploaded_file is None or uploaded_file.filename == '':
+            flash('Tidak ada file yang diunggah', 'error')
+            return redirect(request.url)
+
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            filename = secure_filename(uploaded_file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_file.save(file_path)
+
+            # Membaca gambar
+            img = cv2.imread(file_path)
+            if img is None:
+                flash('Gambar tidak berhasil dibaca', 'error')
+                return redirect(request.url)
+
+            # Melakukan pengolahan (contoh: blur)
+            processed_img = cv2.GaussianBlur(img, (5, 5), 0)
+            if processed_img is None or processed_img.size == 0:
+                flash('Proses gambar gagal', 'error')
+                return redirect(request.url)
+
+            # Menyimpan gambar yang telah diproses
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_' + filename)
+            cv2.imwrite(output_path, processed_img)
+
+            # Menampilkan gambar yang telah diproses
+            return render_template('restoration.html', filename=filename, output_filename='processed_' + filename)
+
+        else:
+            flash('Jenis file tidak diperbolehkan', 'error')
+            return redirect(request.url)
+
+    return render_template('restoration.html',original_image=f'uploads/original_{filename}',
+                                   noisy_image=f'uploads/noisy_{filename}', 
+                                   restored_image=f'uploads/restored_{filename}')
 
 @app.route('/')
 def homepage():
