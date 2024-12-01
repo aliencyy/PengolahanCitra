@@ -111,6 +111,7 @@
                     <option value="morphology">Morphology</option>
                     <option value="scaling">Scaling</option>
                     <option value="restoration">Restoration</option>
+                    <option value="chain_code">Chain Code</option>
                 </select>
 
                 <div id="morphology_options" style="display: none;">
@@ -358,6 +359,21 @@
                     <h3 class="text-lg font-semibold text-gray-600">Gambar yang Direstorasi:</h3>
                     <img src="data:image/png;base64,{{ restored_img_data }}" alt="Restored Image"
                         class="mt-4 rounded-lg shadow-lg">
+                </div>
+                {% endif %}
+
+                <!-- {% if chain_code_img_data %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-600">Gambar Chain Code:</h3>
+                    <img src="data:image/png;base64,{{ chain_code_img_data }}" alt="Chain Code Image"
+                        class="mt-4 rounded-lg shadow-lg">
+                </div>
+                {% endif %} -->
+        
+                {% if chain_code %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-600">Chain Code:</h3>
+                    <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ chain_code }}</pre>
                 </div>
                 {% endif %}
 

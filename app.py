@@ -59,6 +59,7 @@ def upload_file():
             morph_description = None
             noise_img_base64 = None
             restored_img_base64 = None
+            chain_code_img_base64 = None
 
             if image_type == 'grayscale':
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -405,7 +406,77 @@ def upload_file():
                 img_pil.save(img_io, format='PNG')
                 img_io.seek(0)
                 restored_img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
-            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64,scaling_images=scaled_images_data, noise_img_data= noise_img_base64, restored_img_data=restored_img_base64, image_type=image_type)
+
+            elif image_type == 'chain_code':
+                # Convert to grayscale and binary image
+                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                _, binary_img = cv2.threshold(gray_img, 127, 255, cv2.THRESH_BINARY)
+
+                # Find the first white pixel as the starting point
+                start_point = None
+                for i, row in enumerate(binary_img):
+                    for j, value in enumerate(row):
+                        if value == 255:  # White pixel
+                            start_point = (i, j)
+                            break
+                    if start_point:
+                        break
+
+                if not start_point:
+                    return "No white pixels found in the image", 400
+
+                # Define directions and their corresponding indices
+                directions = [0, 1, 2, 7, 3, 6, 5, 4]
+                dir2idx = {d: idx for idx, d in enumerate(directions)}
+
+                change_j = [-1, 0, 1, -1, 1, -1, 0, 1]
+                change_i = [-1, -1, -1, 0, 0, 1, 1, 1]
+
+                # Chain code and border initialization
+                border = []
+                chain = []
+                curr_point = start_point
+
+                # Find the first valid direction
+                for direction in directions:
+                    idx = dir2idx[direction]
+                    new_point = (curr_point[0] + change_i[idx], curr_point[1] + change_j[idx])
+                    if binary_img[new_point] != 0:  # If ROI
+                        border.append(new_point)
+                        chain.append(direction)
+                        curr_point = new_point
+                        break
+
+                # Iteratively find the chain code
+                count = 0
+                while curr_point != start_point:
+                    b_direction = (direction + 5) % 8
+                    dirs = list(range(b_direction, 8)) + list(range(0, b_direction))
+
+                    for direction in dirs:
+                        idx = dir2idx[direction]
+                        new_point = (curr_point[0] + change_i[idx], curr_point[1] + change_j[idx])
+                        if binary_img[new_point] != 0:  # If ROI
+                            border.append(new_point)
+                            chain.append(direction)
+                            curr_point = new_point
+                            break
+
+                    count += 1
+                    if count > 1000:  # Safety limit
+                        break
+
+                # Draw the contour and chain code on the original image
+                for point in border:
+                    cv2.circle(img, (point[1], point[0]), 1, (0, 255, 0), -1)
+                for i, point in enumerate(border):
+                    if i < len(chain):
+                        cv2.putText(img, str(chain[i]), (point[1], point[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 1)
+
+                # Convert the result image to base64
+                _, buffer = cv2.imencode('.png', img)
+                chain_code_img_base64 = base64.b64encode(buffer).decode('utf-8')
+            return render_template('process.html', filename=filename, hist_img_data=hist_img_base64, equal_hist_img_data=equal_hist_img_base64, equalized_img_data=equalized_img_base64, edge_img_data=edge_img_base64, face_img_data=face_img_base64, face_blur_img_data=face_blur_img_base64 ,segmentation_img_data=segmentation_img_base64, blurred_background_img_data=blurred_background_img_base64, vintage_sepia_img_data=vintage_sepia_img_base64, harris_corner_img_data=harris_corner_img_base64,morph_description=morph_description, morphed_img_data=morphed_img_base64,scaling_images=scaled_images_data, noise_img_data= noise_img_base64, restored_img_data=restored_img_base64, chain_code_img_data=chain_code_img_base64, chain_code=chain, image_type=image_type)
 
     filename = request.args.get('filename')
     return render_template('process.html', filename=filename)
