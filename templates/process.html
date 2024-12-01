@@ -344,6 +344,21 @@
                     </div>
                 {% endif %}
 
+                {% if noise_img_data %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-600">Gambar setelah diberi noise:</h3>
+                    <img src="data:image/png;base64,{{ restored_img_data }}" alt="Restored Image"
+                        class="mt-4 rounded-lg shadow-lg">
+                </div>
+                {% endif %}
+
+                {% if restored_img_data %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-600">Gambar yang Direstorasi:</h3>
+                    <img src="data:image/png;base64,{{ restored_img_data }}" alt="Restored Image"
+                        class="mt-4 rounded-lg shadow-lg">
+                </div>
+                {% endif %}
 
             </div>
             {% endif %}
